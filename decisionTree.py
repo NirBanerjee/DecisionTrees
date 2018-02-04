@@ -3,6 +3,7 @@ import math
 import csv
 import sys
 
+
 def entropyCalculator(columnList):
 	maxKey = 0
 	entropy = 0
@@ -23,12 +24,29 @@ def entropyCalculator(columnList):
 
 	return -1*entropy
 
-def infoGainCalculator(labelList, attributeList):
+def infoGainCalculator(labelList, attributeList, attributes, attribute):
+	#print labelList
+	#print attributeList
 	H_Y = entropyCalculator(labelList)
-	print H_Y
-	return 0
+	attributeEntropy = 0
 
-def decisionTreeLearn():
+
+	return (H_Y - attributeEntropy)
+
+def attributeSelector(labelList, attributeList, attributes):
+
+	bestAttribute = attributes[0]
+	maxInfoGain = 0
+
+	for attribute in attributes:
+		newInfoGain = infoGainCalculator(labelList, attributeList, attributes, attribute)
+		if newInfoGain > maxInfoGain:
+			maxInfoGain = newInfoGain
+			bestAttribute = attribute
+
+	return bestAttribute 
+
+def decisionTreeAlgo():
 	#print "In Main Method"
 	dataFrame = []
 	attributeList = []
@@ -38,15 +56,22 @@ def decisionTreeLearn():
 		for row in fileData:
 			dataFrame.append(row)
 
-	dataFrame = dataFrame[1:];
+	dataFrame = dataFrame[1:]
+
+	attributes = []
+
+	tup = dataFrame[0]
+	for i in range(len(tup) -1):
+		attributes.append(i)
 
 	for tup in dataFrame:
 		labelList.append(tup[len(tup) -1])
 		attributeList.append(tup[:len(tup) -1])
 
-	infoGain = infoGainCalculator(labelList, attributeList)
-	print infoGain
+	root = {}
+	root = buildDecisionTree(attributeList, attributes, labelList)
+
 
 
 if __name__ == '__main__':
-	decisionTreeLearn()
+	decisionTreeAlgo()
