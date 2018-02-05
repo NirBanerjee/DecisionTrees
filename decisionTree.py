@@ -123,7 +123,7 @@ def attributeSelector(dataFrame, attributeList, labelColumn):
 	return bestAttribute 
 
 #Method to recursively build Decision Tree
-def buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount):
+def buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount, levels):
 	
 	labelColumnValues = []
 	for tup in dataFrame:
@@ -135,7 +135,7 @@ def buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount):
 	if labelColumnValues.count(labelColumnValues[0]) == len(labelColumnValues):
 		return labelColumnValues[0]
 	
-	if not dataFrame or len(attributeList) <= 1:
+	if not dataFrame or len(attributeList) == 1 or levels == 0:
 		return majorityLabel
 	
 	bestAttribute = attributeSelector(dataFrame, attributeList, labelColumn)
@@ -173,7 +173,7 @@ def buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount):
 	 	string = string + printTreeLine(counts)
 	 	print string
 
-		childNode = buildDecisionTree(dataFrameSubset, newAttributeList, labelColumn, slashCount+1)
+		childNode = buildDecisionTree(dataFrameSubset, newAttributeList, labelColumn, slashCount+1, levels-1)
 		node[bestAttribute][attributeValue] = childNode
 
 	return node
@@ -194,12 +194,22 @@ if __name__ == '__main__':
 
 	labelColumn = attributeList[-1]
 
+	
 	#print count of + and - at the root node
 	counts = getClassCount(dataFrame, attributeList, labelColumn)
 	slashCount = 0
 	print printTreeLine(counts)
 
-	#Building root node recursively
-	slashCount = slashCount +1
+	#Get the number of levels to recurse
+	levels = int(sys.argv[2])
+
+	#If the number of levels is greater than 0, then build tree recursively 
+	#else set root as majority value
 	root = {}
-	root = buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount)
+	if levels == 0:
+		root = getMajorityVote(dataFrame, attributeList, labelColumn)
+	else:
+		slashCount = slashCount +1
+		root = buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount, levels)
+
+	print root
