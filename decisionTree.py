@@ -9,11 +9,13 @@ def getMajorityVote(dataFrame, attributes, labelColumn):
 
 	labelCount = {}
 
+	lastIndex = attributes.index(labelColumn)
+
 	for tup in dataFrame:
-		if tup[labelColumn] in labelCount:
-			labelCount[tup[labelColumn]] = labelCount[tup[labelColumn]] + 1
+		if tup[lastIndex] in labelCount:
+			labelCount[tup[lastIndex]] = labelCount[tup[lastIndex]] + 1
 		else:
-			labelCount[tup[labelColumn]] = 1
+			labelCount[tup[lastIndex]] = 1
 
 	maxCount = 0
 	maxKey = ""
@@ -27,15 +29,17 @@ def getMajorityVote(dataFrame, attributes, labelColumn):
 
 
 #Method to calculate entropy
-def entropyCalculator(dataFrame, column):
+def entropyCalculator(dataFrame, attributeList, labelColumn):
 
 	columnKeyCount = {}
 	entropy = 0
 
+	labelIndex = attributeList.index(labelColumn)
+
 	columnList = []
 
 	for tup in dataFrame:
-		columnList.append(tup[column])
+		columnList.append(tup[labelIndex])
 
 	totalInputs = len(columnList)
 
@@ -53,16 +57,16 @@ def entropyCalculator(dataFrame, column):
 #Method to calculate information gain for every attribute
 def infoGainCalculator(dataFrame, attributeList, attribute, labelColumn):
 	
-	H_Y = entropyCalculator(dataFrame, labelColumn)
+	H_Y = entropyCalculator(dataFrame, attributeList, labelColumn)
 
 	attributeEntropy = 0
 	attributeCount = {}
 
 	for tup in dataFrame:
-		if tup[attribute] in attributeCount:
-			attributeCount[tup[attribute]] = attributeCount[tup[attribute]] + 1
+		if tup[attributeList.index(attribute)] in attributeCount:
+			attributeCount[tup[attributeList.index(attribute)]] = attributeCount[tup[attributeList.index(attribute)]] + 1
 		else:
-			attributeCount[tup[attribute]] = 1
+			attributeCount[tup[attributeList.index(attribute)]] = 1
 
 	sumOfCount = sum(attributeCount.values())
 
@@ -70,10 +74,10 @@ def infoGainCalculator(dataFrame, attributeList, attribute, labelColumn):
 		keyProb = attributeCount[key]/sumOfCount
 		dataFrameSubset = []
 		for tup in dataFrame:
-			if tup[attribute] == key:
+			if tup[attributeList.index(attribute)] == key:
 				dataFrameSubset.append(tup)
-		attributeEntropy = attributeEntropy + keyProb *entropyCalculator(dataFrameSubset, labelColumn)
-	
+		attributeEntropy = attributeEntropy + keyProb *entropyCalculator(dataFrameSubset, attributeList, labelColumn)
+
 	return (H_Y - attributeEntropy)
 
 #Method to return the best attribute for split
@@ -92,53 +96,55 @@ def attributeSelector(dataFrame, attributeList, labelColumn):
 
 	return bestAttribute 
 
-#Method to return a list of values held by the best Attribute
-def getValues (dataFrame, attributeList, bestAttribute):
-
-	values = []
-	for tup in dataFrame:
-		if tup[bestAttribute] not in values:
-			values.append(tup[bestAttribute])
-
-	return values
-
 #Method to recursively build Decision Tree
 def buildDecisionTree(dataFrame, attributeList, labelColumn):
 	
+	#dataFrame = dataFrame[:]
+	labelColumnValues = []
+	for tup in dataFrame:
+		labelColumnValues.append(tup[attributeList.index(labelColumn)])
+
 	majorityLabel = getMajorityVote(dataFrame, attributeList, labelColumn)
 
-	if majorityLabel == len(dataFrame):
+	#print attributeList
+	if labelColumnValues.count(labelColumnValues[0]) == len(labelColumnValues):
+		return labelColumnValues[0]
+	
+	if not dataFrame or len(attributeList) <= 1:
 		return majorityLabel
-	else:
-		bestAttribute = attributeSelector(dataFrame, attributeList, labelColumn)
-		node = {bestAttribute:{}}
-		bestAttributeValues=[]
-		bestAttributeValues = getValues(dataFrame, attributeList, bestAttribute)
+	
+	bestAttribute = attributeSelector(dataFrame, attributeList, labelColumn)
 
-		for attributeValue in bestAttributeValues:
+	node = {bestAttribute:{}}
 
-			dataFrameSubset=[]
+	bestAttributeValues=[]
+	for tup in dataFrame:
+		if tup[attributeList.index(bestAttribute)] not in bestAttributeValues:
+			bestAttributeValues.append(tup[attributeList.index(bestAttribute)])
+	
+	for attributeValue in bestAttributeValues:
+		dataFrameSubset=[]
 
-			for tup in dataFrame:
-				newRow = []
-				if tup[bestAttribute] == attributeValue:
-					for i in range(len(tup)):
-						if i != bestAttribute:
-							newRow.append(tup[i])
-				if len(newRow) != 0:
-					dataFrameSubset.append(newRow)
+		for tup in dataFrame:
+	 		newRow = []
+	 		if tup[attributeList.index(bestAttribute)] == attributeValue:
+	 			for i in range(len(tup)):
+	 				if i != attributeList.index(bestAttribute):
+	 					newRow.append(tup[i])
+	 			if len(newRow) != 0:
+	 				dataFrameSubset.append(newRow)
 
-			newAttributeList = list(attributeList)
-			newAttributeList.remove(bestAttribute)
-			tup
-			childNode = buildDecisionTree(dataFrameSubset, newAttributeList, )
+	 	#print dataFrameSubset
+	 	newAttributeList = list(attributeList)
+	 	newAttributeList.remove(bestAttribute)
+	 	#print newAttributeList
+		childNode = buildDecisionTree(dataFrameSubset, newAttributeList, labelColumn)
+		#print childNode
+		node[bestAttribute][attributeValue] = childNode
 
-	return 0
+	return node
 
-
-#Method to initialize the creation of decision Tree
-def decisionTreeAlgo():
-	#print "In Main Method"
+if __name__ == '__main__':
 	dataFrame = []
 	attributeList = []
 	labelList = [] 
@@ -148,19 +154,14 @@ def decisionTreeAlgo():
 			dataFrame.append(tuple(row))
 
 	attributeList = []
-
-	dataFrame = dataFrame[1:]
 	tup = dataFrame[0]
-	for i in range(len(tup)):
-	 	attributeList.append(i)
+	attributeList = list(tup)
+	dataFrame = dataFrame[1:]
 
-	labelColumn = len(tup) - 1
+	labelColumn = attributeList[-1]
 
 	#Building root node
 	root = {}
 	root = buildDecisionTree(dataFrame, attributeList, labelColumn)
 	
-	
-
-if __name__ == '__main__':
-	decisionTreeAlgo()
+	print root
