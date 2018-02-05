@@ -1,9 +1,13 @@
+#Import Section
 from __future__ import division
 import math
 import csv
 import sys
 
+#Method to get Majority Vote among the labels in dataset
 
+
+#Method to calculate entropy
 def entropyCalculator(columnList):
 	maxKey = 0
 	entropy = 0
@@ -24,6 +28,7 @@ def entropyCalculator(columnList):
 
 	return -1*entropy
 
+#Method to calculate information gain for every attribute
 def infoGainCalculator(labelList, attributeList, attributes, attribute):
 	#print labelList
 	#print attributeList
@@ -33,6 +38,7 @@ def infoGainCalculator(labelList, attributeList, attributes, attribute):
 
 	return (H_Y - attributeEntropy)
 
+#Method to return the best attribute for split
 def attributeSelector(labelList, attributeList, attributes):
 
 	bestAttribute = attributes[0]
@@ -46,6 +52,15 @@ def attributeSelector(labelList, attributeList, attributes):
 
 	return bestAttribute 
 
+#Method to recursively build Decision Tree
+def buildDecisionTree(dataFrame, attributes, labelColumn):
+	
+	majorityLabel = getMajorityVote(dataFrame, attributes, labelColumn)
+
+	return 0
+
+
+#Method to initialize the creation of decision Tree
 def decisionTreeAlgo():
 	#print "In Main Method"
 	dataFrame = []
@@ -54,22 +69,22 @@ def decisionTreeAlgo():
 	with open(sys.argv[1], 'rb') as csvfile:
 		fileData = csv.reader(csvfile, delimiter=',')
 		for row in fileData:
-			dataFrame.append(row)
-
-	dataFrame = dataFrame[1:]
+			dataFrame.append(tuple(row))
 
 	attributes = []
 
+	dataFrame = dataFrame[1:]
 	tup = dataFrame[0]
-	for i in range(len(tup) -1):
-		attributes.append(i)
+	for i in range(len(tup)):
+	 	attributes.append(i)
 
-	for tup in dataFrame:
-		labelList.append(tup[len(tup) -1])
-		attributeList.append(tup[:len(tup) -1])
-
+	#print attributes
+	labelColumn = len(tup) - 1
 	root = {}
-	root = buildDecisionTree(attributeList, attributes, labelList)
+	root = buildDecisionTree(dataFrame, attributes, labelColumn)
+	
+	# root = {}
+	# root = buildDecisionTree(attributeList, attributes, labelList)
 
 
 
