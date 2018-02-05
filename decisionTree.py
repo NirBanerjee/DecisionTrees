@@ -4,6 +4,19 @@ import math
 import csv
 import sys
 
+#Method to return the error count of training and testing data
+def getError(labelList, predictLabelList):
+
+	if len(labelList) != len(predictLabelList):
+		return -1;
+
+	mismatchCount = 0
+	for i in range(len(labelList)):
+		if labelList[i] != predictLabelList[i]:
+			mismatchCount = mismatchCount + 1
+
+	return (mismatchCount)/len(labelList)
+
 #Method to return the count of classified and unclassified keys
 def getClassCount(dataFrame, attributeList, labelColumn):
 	
@@ -178,10 +191,46 @@ def buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount, levels)
 
 	return node
 
+#Recursively traverse a tree to get the label corresponding to a tuple in the dataset
+def getLabelForRow(root, tup, attributeList):
+	
+	keyList = list(root.keys())
+
+	key = keyList[0]
+	attributeIndex = attributeList.index(key);
+	
+	subNode = root[key]
+
+	for subKey in subNode.keys():
+		if tup[attributeIndex] == subKey:
+			nextNode = subNode[subKey]
+			if type(nextNode) is dict:
+				label = getLabelForRow(nextNode, tup, attributeList)
+			else:
+				return nextNode
+
+	return label
+
+#Method to return the set of all labels for a dataset
+def getDatasetLabels(root, dataFrame, attributeList, levels):
+
+	labelList = []
+	for tup in dataFrame:
+		if levels == 0:
+			labelList.append(root)
+		else:
+			labelList.append(getLabelForRow(root, tup, attributeList))
+
+	return labelList
+
 if __name__ == '__main__':
+
 	dataFrame = []
 	attributeList = []
 	labelList = [] 
+	returnLabels = []
+
+	#Read training file to build tree
 	with open(sys.argv[1], 'rb') as csvfile:
 		fileData = csv.reader(csvfile, delimiter=',')
 		for row in fileData:
@@ -193,7 +242,6 @@ if __name__ == '__main__':
 	dataFrame = dataFrame[1:]
 
 	labelColumn = attributeList[-1]
-
 	
 	#print count of + and - at the root node
 	counts = getClassCount(dataFrame, attributeList, labelColumn)
@@ -201,7 +249,7 @@ if __name__ == '__main__':
 	print printTreeLine(counts)
 
 	#Get the number of levels to recurse
-	levels = int(sys.argv[2])
+	levels = int(sys.argv[3])
 
 	#If the number of levels is greater than 0, then build tree recursively 
 	#else set root as majority value
@@ -212,4 +260,28 @@ if __name__ == '__main__':
 		slashCount = slashCount +1
 		root = buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount, levels)
 
-	print root
+	#Return Predictions for training data
+	returnLabels = getDatasetLabels(root, dataFrame, attributeList, levels)
+
+	#Write data to training.labels file
+	writer = open(sys.argv[4], 'w')
+	for label in returnLabels:
+		writer.write(label + "\n")
+	writer.close
+
+	#Get the training Error
+	for tup in dataFrame:
+		labelList.append(tup[attributeList.index(labelColumn)])
+
+	trainError = getError(labelList, returnLabels)
+
+	#
+	
+
+
+
+
+
+
+
+

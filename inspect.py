@@ -33,7 +33,6 @@ for key in dictOutput:
 entropy = entropy * -1;
 error = (no_of_inputs-maxKey)/no_of_inputs
 
-#Writing the result to file
 writer = open(sys.argv[2],'w')
 writer.write("entropy: " + str(entropy) + "\n")
 writer.write("error: " + str(error))
