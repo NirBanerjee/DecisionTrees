@@ -4,12 +4,38 @@ import math
 import csv
 import sys
 
+#Method to return the count of classified and unclassified keys
+def getClassCount(dataFrame, attributeList, labelColumn):
+	
+	counts = {}
+	lastIndex = attributeList.index(labelColumn)
+	for tup in dataFrame:
+		if tup[lastIndex] in counts:
+			counts[tup[lastIndex]]  = counts[tup[lastIndex]] + 1
+		else:
+			counts[tup[lastIndex]] = 1
+
+	return counts
+
+#Print each line after tree goes to next level
+def printTreeLine(counts):
+
+	string = "["
+	
+	for key in counts:
+		string = string + str(counts[key]) + " = " + str(key) + " /"
+
+	string = string[:-1]
+	string = string + "]"
+
+	return string
+
 #Method to get Majority Vote among the labels in dataset
-def getMajorityVote(dataFrame, attributes, labelColumn):
+def getMajorityVote(dataFrame, attributeList, labelColumn):
 
 	labelCount = {}
 
-	lastIndex = attributes.index(labelColumn)
+	lastIndex = attributeList.index(labelColumn)
 
 	for tup in dataFrame:
 		if tup[lastIndex] in labelCount:
@@ -97,9 +123,8 @@ def attributeSelector(dataFrame, attributeList, labelColumn):
 	return bestAttribute 
 
 #Method to recursively build Decision Tree
-def buildDecisionTree(dataFrame, attributeList, labelColumn):
+def buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount):
 	
-	#dataFrame = dataFrame[:]
 	labelColumnValues = []
 	for tup in dataFrame:
 		labelColumnValues.append(tup[attributeList.index(labelColumn)])
@@ -134,12 +159,21 @@ def buildDecisionTree(dataFrame, attributeList, labelColumn):
 	 			if len(newRow) != 0:
 	 				dataFrameSubset.append(newRow)
 
-	 	#print dataFrameSubset
+
+
 	 	newAttributeList = list(attributeList)
 	 	newAttributeList.remove(bestAttribute)
-	 	#print newAttributeList
-		childNode = buildDecisionTree(dataFrameSubset, newAttributeList, labelColumn)
-		#print childNode
+
+	 	string = ""
+	 	for i in range(slashCount):
+	 		string = string + '|'
+	 	string = string + " " + bestAttribute + " = " + attributeValue + " : "
+	 	counts = {}
+	 	counts = getClassCount(dataFrameSubset, newAttributeList, labelColumn)
+	 	string = string + printTreeLine(counts)
+	 	print string
+
+		childNode = buildDecisionTree(dataFrameSubset, newAttributeList, labelColumn, slashCount+1)
 		node[bestAttribute][attributeValue] = childNode
 
 	return node
@@ -160,8 +194,12 @@ if __name__ == '__main__':
 
 	labelColumn = attributeList[-1]
 
-	#Building root node
+	#print count of + and - at the root node
+	counts = getClassCount(dataFrame, attributeList, labelColumn)
+	slashCount = 0
+	print printTreeLine(counts)
+
+	#Building root node recursively
+	slashCount = slashCount +1
 	root = {}
-	root = buildDecisionTree(dataFrame, attributeList, labelColumn)
-	
-	print root
+	root = buildDecisionTree(dataFrame, attributeList, labelColumn, slashCount)
