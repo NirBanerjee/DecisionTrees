@@ -243,7 +243,7 @@ if __name__ == '__main__':
 
 	labelColumn = attributeList[-1]
 	
-	#print count of + and - at the root node
+	#Print count of + and - at the root node
 	counts = getClassCount(dataFrame, attributeList, labelColumn)
 	slashCount = 0
 	print printTreeLine(counts)
@@ -269,13 +269,50 @@ if __name__ == '__main__':
 		writer.write(label + "\n")
 	writer.close
 
-	#Get the training Error
+	#Get the train Error
 	for tup in dataFrame:
 		labelList.append(tup[attributeList.index(labelColumn)])
 
 	trainError = getError(labelList, returnLabels)
 
-	#
+	#Open test file to return predictions
+	testDataFrame = []
+	with open(sys.argv[2], 'rb') as csvfile:
+		fileData = csv.reader(csvfile, delimiter=',')
+		for row in fileData:
+			testDataFrame.append(tuple(row))
+
+	testDataFrame = testDataFrame[1:]
+	#Return predicted labels on test data set
+	returnLabels = getDatasetLabels(root, testDataFrame, attributeList, levels)
+
+	#Write data to test.labels file
+	writer = open(sys.argv[5], 'w')
+	for label in returnLabels:
+		writer.write(label + "\n")
+	writer.close
+
+	labelList = []
+	#Get the test Error
+	for tup in testDataFrame:
+		labelList.append(tup[attributeList.index(labelColumn)])
+
+	testError = getError(labelList, returnLabels)
+
+	#Print train and test error to metrics.txt
+	writer = open(sys.argv[6],'w')
+	writer.write("error(train): " + str(trainError) + "\n")
+	writer.write("error(test): " + str(testError))
+	writer.close
+
+######----END OF CODE----######
+
+
+
+
+
+
+
 	
 
 
